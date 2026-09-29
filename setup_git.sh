@@ -59,9 +59,14 @@ fi
 gitcfg init.defaultBranch main
 gitcfg pull.rebase false
 
-# Synchronisation GitHub (origin) <-> forge interne (forge), branche courante
-gitcfg alias.forge-push '!f() { b=$(git branch --show-current); git pull origin "$b" && git push forge "$b"; }; f'
-gitcfg alias.forge-pull '!f() { b=$(git branch --show-current); git pull forge "$b" && git push origin "$b"; }; f'
+# Synchronisation GitHub (origin) <-> forge interne (forge).
+# Sur la forge, main n'evolue que par merge request :
+#   git forge-push          envoie la branche de travail courante sur la forge
+#                           (apres l'avoir mise a jour depuis GitHub) ; refuse main
+#   git forge-pull [main]   recopie main de la forge vers GitHub (avance rapide
+#                           uniquement : rien n'est jamais ecrase)
+gitcfg alias.forge-push '!f() { b=$(git branch --show-current); case "$b" in ""|main|master) echo "forge-push : place-toi sur une branche de travail (pas \"$b\") ; main ne change sur la forge que par merge request." >&2; return 1;; esac; if git ls-remote --exit-code --heads origin "$b" >/dev/null; then git fetch origin "$b" && git merge --ff-only "origin/$b" || return 1; fi; git push -u forge "$b"; }; f'
+gitcfg alias.forge-pull '!f() { m="${1:-main}"; git fetch forge "$m" && git push origin "refs/remotes/forge/$m:refs/heads/$m" || return 1; if [ "$(git branch --show-current)" = "$m" ]; then git merge --ff-only "forge/$m"; fi; }; f'
 
 # -- 3. Un seul helper, routage automatique par forge -----------------------
 gitcfg credential.helper "$HELPER"
@@ -121,7 +126,7 @@ if [ -n "${GIT_REPOSITORY:-}" ]; then
     if [ -n "$FORGE_HOST_VALUE" ] && [ -n "$FORGE_PATH" ]; then
       git -C "$TARGET" remote remove forge 2>/dev/null || true
       git -C "$TARGET" remote add forge "https://$FORGE_HOST_VALUE/${FORGE_PATH%.git}.git"
-      echo "[git] Remote 'forge' ajoute (git forge-push / git forge-pull)."
+      echo "[git] Remote 'forge' ajoute : git forge-push (branche -> forge), git forge-pull (main forge -> GitHub)."
     else
       echo "[git] Pas de remote 'forge' pour $REPO_NAME (FORGE_HOST ou FORGE_REMOTES absent)."
     fi
