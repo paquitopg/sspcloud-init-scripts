@@ -59,6 +59,10 @@ fi
 gitcfg init.defaultBranch main
 gitcfg pull.rebase false
 
+# Synchronisation GitHub (origin) <-> forge interne (forge), branche courante
+gitcfg alias.forge-push '!f() { b=$(git branch --show-current); git pull origin "$b" && git push forge "$b"; }; f'
+gitcfg alias.forge-pull '!f() { b=$(git branch --show-current); git pull forge "$b" && git push origin "$b"; }; f'
+
 # -- 3. Un seul helper, routage automatique par forge -----------------------
 gitcfg credential.helper "$HELPER"
 git config --file "$GITCONFIG" --remove-section 'credential.https://github.com' 2>/dev/null || true
@@ -99,6 +103,27 @@ if [ -n "${GIT_REPOSITORY:-}" ]; then
       echo "[git] Depot clone dans $TARGET"
     else
       echo "[git] ECHEC du clonage (token absent dans Vault ?)."
+    fi
+  fi
+  
+  # -- 5b. Remote « forge » : miroir du depot sur la forge interne ---------
+  # Ni l'hote ni le chemin ne sont ecrits ici (depot public) : l'hote vient
+  # de la cle FORGE_HOST, et la cle FORGE_REMOTES associe le nom du depot a
+  # son chemin sur la forge, paires separees par des espaces :
+  #   mon-depot=groupe/sous-groupe/mon-depot autre-depot=groupe/autre
+  if [ -d "$TARGET/.git" ]; then
+    FORGE_HOST_VALUE="$("$HELPER" secret FORGE_HOST 2>/dev/null)"
+    FORGE_REMOTES_VALUE="$("$HELPER" secret FORGE_REMOTES 2>/dev/null)"
+    FORGE_PATH=""
+    for paire in $FORGE_REMOTES_VALUE; do
+      [ "${paire%%=*}" = "$REPO_NAME" ] && FORGE_PATH="${paire#*=}"
+    done
+    if [ -n "$FORGE_HOST_VALUE" ] && [ -n "$FORGE_PATH" ]; then
+      git -C "$TARGET" remote remove forge 2>/dev/null || true
+      git -C "$TARGET" remote add forge "https://$FORGE_HOST_VALUE/${FORGE_PATH%.git}.git"
+      echo "[git] Remote 'forge' ajoute (git forge-push / git forge-pull)."
+    else
+      echo "[git] Pas de remote 'forge' pour $REPO_NAME (FORGE_HOST ou FORGE_REMOTES absent)."
     fi
   fi
 else
