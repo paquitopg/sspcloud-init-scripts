@@ -41,6 +41,8 @@ executer_brique() {
 
 executer_brique "install_claude.sh"
 executer_brique "setup_git.sh"
+# Après setup_git.sh : clone un dépôt privé avec le helper Vault qu'il installe.
+executer_brique "setup_claude_config.sh"
 
 rm -rf "$TRAVAIL"
 echo ""
