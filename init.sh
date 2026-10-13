@@ -40,6 +40,8 @@ executer_brique() {
 }
 
 executer_brique "install_claude.sh"
+# Après install_claude.sh : a besoin du CLI « claude ».
+executer_brique "install_claude_plugins.sh"
 executer_brique "setup_git.sh"
 # Après setup_git.sh : gh lit son token avec le helper Vault qu'il installe.
 executer_brique "install_gh.sh"
