@@ -22,6 +22,8 @@ NODE_LOCAL="$USER_HOME/.local/node"
 
 PLUGINS="
 EveryInc/compound-engineering-plugin compound-engineering@compound-engineering-plugin
+anthropics/claude-plugins-official frontend-design@claude-plugins-official
+DietrichGebert/ponytail ponytail@ponytail
 "
 
 echo "[claude-plugins] Installation en cours..."
