@@ -67,6 +67,11 @@ gitcfg pull.rebase false
 #                           uniquement : rien n'est jamais ecrase)
 gitcfg alias.forge-push '!f() { b=$(git branch --show-current); case "$b" in ""|main|master) echo "forge-push : place-toi sur une branche de travail (pas \"$b\") ; main ne change sur la forge que par merge request." >&2; return 1;; esac; if git ls-remote --exit-code --heads origin "$b" >/dev/null; then git fetch origin "$b" && git merge --ff-only "origin/$b" || return 1; fi; git push -u forge "$b"; }; f'
 gitcfg alias.forge-pull '!f() { m="${1:-main}"; git fetch forge "$m" && git push origin "refs/remotes/forge/$m:refs/heads/$m" || return 1; if [ "$(git branch --show-current)" = "$m" ]; then git merge --ff-only "forge/$m"; fi; }; f'
+# Flux : la forge est la reference, GitHub (origin) son miroir. SSPCloud n'atteint pas la forge.
+#   git feat <nom>   (SSPCloud)   nouvelle branche partie de origin/main (= forge/main apres forge-pull)
+#   git ship <nom>   (Nubonyxia)  rebase de la branche sur forge/main, republication sur GitHub, puis forge-push
+gitcfg alias.feat '!f() { git fetch origin && git switch -c "$1" origin/main; }; f'
+gitcfg alias.ship '!f() { git fetch origin && git fetch forge && git switch "$1" && git rebase forge/main && git push --force-with-lease origin "$1" && git forge-push; }; f'
 
 # -- 3. Un seul helper, routage automatique par forge -----------------------
 gitcfg credential.helper "$HELPER"
