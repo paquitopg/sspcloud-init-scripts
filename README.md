@@ -17,6 +17,7 @@ https://raw.githubusercontent.com/paquitopg/sspcloud-init-scripts/refs/heads/mai
 | `setup_git.sh` | Git, helper `git-credential-vault`, clone du dépôt du service |
 | `install_gh.sh` | CLI GitHub, token lu dans Vault |
 | `setup_claude_config.sh` | `CLAUDE.md` et skills depuis un dépôt privé |
+| `setup_vscode.sh` | Thème « Dark Modern » par défaut (sans écraser un thème déjà choisi) |
 
 Aucun secret ici : les tokens sont lus dans Vault à chaque usage.
 

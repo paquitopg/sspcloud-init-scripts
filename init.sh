@@ -49,6 +49,7 @@ executer_brique "setup_git.sh"
 executer_brique "install_gh.sh"
 # Après setup_git.sh : clone un dépôt privé avec le helper Vault qu'il installe.
 executer_brique "setup_claude_config.sh"
+executer_brique "setup_vscode.sh"
 
 rm -rf "$TRAVAIL"
 echo ""
